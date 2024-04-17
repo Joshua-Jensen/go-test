@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/gocolly/colly"
 )
@@ -18,7 +19,6 @@ type item struct {
 
 func main() {
 	c := colly.NewCollector(
-		colly.Async(true),
 		colly.AllowedDomains("www.albertsons.com"),
 	)
 	// var items []item
@@ -29,8 +29,23 @@ func main() {
 	// 	}
 	// 	items = append(items, item)
 	// })
+	file, err := os.Create("output.html")
+	if err != nil{
+		fmt.Println("error creating file", err)
+		return	
+	}
+	defer file.Close()
 
 
+c.OnHTML("body",func(e *colly.HTMLElement) {
+	_, err = file.WriteString(e.Text)
+	if err != nil{
+fmt.Println("failed to write to file:", err)
+return	
+	}
+fmt.Println("Wrote to file", file.Name())
+
+})
 
 c.OnRequest(func(r *colly.Request) {
 	fmt.Println("visiting",r.URL)
@@ -41,11 +56,12 @@ c.OnResponse(func(r *colly.Response) {
 })
 
 c.OnError(func(r *colly.Response, err error) {
+	if err != nil {
 	log.Println("whoops!",err)
+	}
 })
 
 c.Visit("https://www.albertsons.com/shop/search-results.html?q=egg")
 
-c.Wait()
-fmt.Println("scrapping done /n", document)
+fmt.Println("scrapping done /n", )
 }
